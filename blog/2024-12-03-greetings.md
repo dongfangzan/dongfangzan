@@ -1,6 +1,7 @@
 ---
 slug: greetings
 title: 你好，欢迎来到我的博客
+sticky: true
 authors:
   - name: 东方赞
     title: 程序员/注册会计师/终身学习者

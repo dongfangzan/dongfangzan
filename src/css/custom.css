@@ -28,3 +28,14 @@
   --ifm-color-primary-lightest: #4fddbf;
   --docusaurus-highlighted-code-line-bg: rgba(0, 0, 0, 0.3);
 }
+
+.blog-list-page h2[class*="title"]
+{
+  font-size: 2.3rem;
+}
+
+/* Reduce title size in blog page */
+.blog-post-page h2[class*="title"]
+{
+  font-size: 2.3rem;
+}
