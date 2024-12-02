@@ -72,10 +72,16 @@ const config: Config = {
       async: true
     }
   ],
-
+  clientModules: [require.resolve('./src/clientModules/routeModules.ts')],
   themeConfig: {
     // Replace with your project's social card
     image: 'img/docusaurus-social-card.jpg',
+    giscus: {
+      repo: 'dongfangzan/dongfangzan', // edit this
+      repoId: 'R_kgDONXmCSQ', // edit this
+      category: 'General',
+      categoryId: 'DIC_kwDONXmCSc4CkzTE', // edit this
+    },
     navbar: {
       title: '东方赞',
       logo: {
