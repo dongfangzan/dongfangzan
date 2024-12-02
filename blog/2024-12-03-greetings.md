@@ -10,6 +10,5 @@ authors:
 tags: [hello]
 ---
 
-Congratulations, you have made your first post!
-
-Feel free to play around and edit this post as much as you like.
+#### 关于我
+欢迎来到我的博客！这里是我分享知识、经验和见解的地方。希望通过这个平台与志同道合的朋友们交流，互相学习，共同成长。让我们一起探索技术与财务的世界，分享彼此的故事和见解！
