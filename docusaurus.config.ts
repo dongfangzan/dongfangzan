@@ -1,11 +1,14 @@
 import {themes as prismThemes} from 'prism-react-renderer';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 const config: Config = {
   title: '东方赞',
-  tagline: 'Dinosaurs are cool',
+  tagline: '东方赞的小窝',
   favicon: 'img/favicon.ico',
+  staticDirectories: ['static'],
 
   // Set the production url of your site here
   url: 'https://dongfangzan.cn',
@@ -35,6 +38,8 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          remarkPlugins: [remarkMath],
+          rehypePlugins: [rehypeKatex],
           // Please change this to your repo.
           // Remove this to remove the "edit this page" links.
           // editUrl:
@@ -92,9 +97,9 @@ const config: Config = {
         {to: '/', label: 'Blog', position: 'left'},
         {
           type: 'docSidebar',
-          sidebarId: 'teslaSidebar',
+          sidebarId: 'aiSidebar',
           position: 'left',
-          label: 'Tesla API',
+          label: '人工智能',
         },
         {
           type: 'docSidebar',
@@ -107,6 +112,13 @@ const config: Config = {
           sidebarId: 'aboutSidebar',
           position: 'right',
           label: '关于我',
+        },
+        {
+          // type: 'docSidebar',
+          // sidebarId: 'teslaSidebar',
+          href: 'https://tesla.dongfangzan.cn',
+          position: 'right',
+          label: 'Tesla API',
         },
         {
           href: 'https://github.com/dongfangzan',

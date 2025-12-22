@@ -1,0 +1,8 @@
+{
+  "label": "DeepSeek系列",
+  "position": 3,
+  "link": {
+    "type": "generated-index",
+    "description": "DeepSeek系列大模型的部署、使用操作"
+  }
+}

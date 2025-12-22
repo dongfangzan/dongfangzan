@@ -1,0 +1,202 @@
+---
+title: "小米大模型Mimo-V2-Flash本地部署"
+slug: /how-to-deploy-mimo-v2-flash
+tags: [llm, mimo]
+date: 2025-12-19T10:00
+---
+Mimo-V2-Flash如何在本地部署？需要多少算力？效果如何？
+
+<!-- truncate -->
+
+# 准备模型
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img16@main/2025/12/19/1766116861023-4101b4ef-6317-43ff-9001-fa8825593cd3.png)
+
+<!-- truncate -->
+
+话不多说直接开始，模型下载地址：
+
+https://modelscope.cn/models/XiaomiMiMo/MiMo-V2-Flash
+
+https://huggingface.co/XiaomiMiMo/MiMo-V2-Flash
+
+下载完成后，可以看到整个模型文件大小为292G
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img15@main/2025/12/19/1766116493702-9717ddeb-537a-4a34-9145-1fe19dfa6a03.png)
+
+在比较知名的开源模型中，与通义千问3-235B-FP8模型大小近似
+
+简单做个对比如下
+
+|       |    Mimo-V2-Flash   |  Qwen3-235B-FP8  |
+| --- | --- | --- |
+|   总参数    |  309B  |  235B  |
+|   激活参数    |    15B   |   22B    |
+|   模型大小   |   292G    |   221G    |
+
+*Mimo-V2-Flash是在FP8上原生训练的而Qwen3并不是，所以这里仅对比同在FP8下的模型大小*
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img6@main/2025/12/19/1766116580308-e22d7d3d-d489-4fd5-9de3-c644770f728e.png)
+
+
+# Day0 部署准备
+
+这里我的测试机器是一台8 * H100 80G的服务器
+![](https://fastly.jsdelivr.net/gh/bucketio/img19@main/2025/12/19/1766117229290-ff6e25a2-3933-4d9b-88db-9ee4bd4c92e3.png)
+
+根据模型卡片描述，我们可以直接使用sglang的python包进行启动。
+![](https://fastly.jsdelivr.net/gh/bucketio/img16@main/2025/12/19/1766117452922-5b624133-e829-4a7a-abf0-6686593018e4.png)
+
+为了环境更纯净，通常来说用docker可能更简单点
+
+我们可以找到sglang最近的dev版本
+```
+docker pull lmsysorg/sglang:dev
+```
+*截止到写稿时，sglang还没有发布正式支持Mimo-V2-Flash的新发布版本*
+
+*小米牌面不行啊[吃瓜]，DeepSeek每次都是秒发*
+
+# 部署开始
+
+1.使用下面的启动命令，将容器挂起
+
+```
+docker run -d --gpus all \
+  --shm-size=32g \
+  --ipc=host \
+  --network=host \
+  --name mimo-v2 \
+  -v /path/to/huggingface:/root/.cache/huggingface \
+  lmsysorg/sglang:dev \
+  bash -c "while true; do sleep 3600; done"
+```
+
+2.进入容器
+```
+docker exec -it mimo-v2 bash
+```
+
+3.卸载容器内已经按照好的sglang，并按照包含了mimo-v2-flash的sglang
+```
+pip uninstall sglang -y
+
+pip install sglang==0.5.6.post2.dev8005+pr.15207.g39d5bd57a \
+  --index-url https://sgl-project.github.io/whl/pr/ \
+  --extra-index-url https://pypi.org/simple
+```
+
+4.执行下面的命令来启动模型
+```
+export SGLANG_ENABLE_SPEC_V2=1
+nohup python3 -m sglang.launch_server \
+      --model-path /root/.cache/huggingface/hub/XiaomiMiMo/MiMo-V2-Flash \
+      --served-model-name mimo-v2-flash \
+      --pp-size 1 \
+      --dp-size 2 \
+      --enable-dp-attention \
+      --tp-size 8 \
+      --moe-a2a-backend deepep \
+      --page-size 1 \
+      --trust-remote-code \
+      --tool-call-parser mimo \
+      --chunked-prefill-size 16384 \
+      --reasoning-parser qwen3 \
+      --context-length 262144 \
+      --attention-backend fa3 \
+      --speculative-algorithm EAGLE \
+      --speculative-num-steps 3 \
+      --speculative-eagle-topk 1 \
+      --speculative-num-draft-tokens 4 \
+      --host 0.0.0.0 \
+      --port 8000 > app.log 2>&1 &
+```
+*需要注意的是，官网放出的--enable-mtp，在H100上无法正常启动*
+
+最后我们如果看到下面的日志，就表明启动成功啦！
+![](https://fastly.jsdelivr.net/gh/bucketio/img4@main/2025/12/19/1766118698349-cad3eba9-e7d2-43ca-8a81-7907222e0174.png)
+
+找一个AI客户端来看使用成果
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img19@main/2025/12/19/1766118913056-7f02982d-dd7f-4dfd-9887-d7d033b26437.png)
+
+可以看到Decode的速度是非常快的
+
+最快可以达到**170tokens/s**
+
+平均也达到了**110tokens/s**，比较惊喜，也超过了在默认启动参数下Qwen3-235B
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img17@main/2025/12/19/1766120005204-17134d06-f3b0-4ee7-93db-3034ede0930b.png)
+
+
+
+
+# 深度思考
+`Mimo-V2-Flash`是一个支持切换思考和非思考的模型
+
+通过模型卡片描述可以看到
+```
+curl -i http://localhost:9001/v1/chat/completions \
+    -H 'Content-Type:application/json' \
+    -d  '{
+            "messages" : [{
+                "role": "user",
+                "content": "Nice to meet you MiMo"
+            }],
+            "model": "mimo-v2-flash",
+            "max_tokens": 4096,
+            "temperature": 0.8,
+            "top_p": 0.95,
+            "stream": true,
+            "chat_template_kwargs": {
+                "enable_thinking": true
+            }
+        }'
+```
+通过参数来控制思考开关
+```
+"chat_template_kwargs": {
+    "enable_thinking": true
+}
+```
+
+与其他模型不同，在现阶段本地部署的`Mimo-V2-Flash`
+
+**`enable_thinking`是必须要传的**
+
+否则会导致模型回复的内容直接解析到了思考内容中
+
+这可能是由于早期版本使用的通义千问的reasoning-parser导致的问题，待后续修复
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img5@main/2025/12/19/1766119266617-751bb723-6f32-4324-b391-ae161eb4e077.png)
+
+
+# 工具调用
+在不开启深度思考模式时，目前工具调用可以正常使用
+
+![](https://fastly.jsdelivr.net/gh/bucketio/img7@main/2025/12/19/1766119440710-fe3596ee-1825-49bd-bf94-9ba243f37b9b.png)
+
+开启深度思考后，如果temperature过高，很大程度上会导致工具调用失败
+![](https://fastly.jsdelivr.net/gh/bucketio/img11@main/2025/12/19/1766119672069-76ed0d99-9b97-4108-a18b-456427b2bbe5.png)
+
+推荐temperature=0.3时
+![](https://fastly.jsdelivr.net/gh/bucketio/img11@main/2025/12/19/1766119882146-34aef78c-b848-4a23-b0b8-7f7c3161ee38.png)
+
+
+在使用时尽量按照官方文档中推荐的采样参数进行设置
+
+>IMPORTANT
+>**推荐的采样参数**：
+>top_p=**0.95**
+>temperature=**0.8** 适用于数学、写作、Web 开发
+>temperature=**0.3** 适用于自主任务（例如，氛围编码、工具使用）
+# 结尾
+好啦，这就是`Mimo-V2-Flash`在Day0的一些本地部署测试
+
+目前还存在一些小bug，应该会在后续版本中修复，随着持续优化也会有更强的性能
+
+接下来一段时间我这边也会持续使用一段时间这个模型
+
+看一下在写作、编程等实际使用场景的效果如何
+
+感谢你看到这里啦！

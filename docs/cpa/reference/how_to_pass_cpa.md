@@ -46,7 +46,7 @@ CPA考试6科分专业阶段和综合阶段，专业阶段共6科，把科目学
 ### 时间安排
 
 如果你跟我一样0基础，是一个甚至连借贷都搞不懂的小白（我估计这篇文章的读者没有比我更菜的了），我的时间安排或许有一点参考价值。
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/141952/1669083071586-040c72b2-7eb4-4dcf-853a-2aea44ae1e29.png#averageHue=%23fefefd&clientId=ub5d425e3-7dc5-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=432&id=u6a49cb11&margin=%5Bobject%20Object%5D&name=image.png&originHeight=864&originWidth=1368&originalType=binary&ratio=1&rotation=0&showTitle=false&size=413386&status=done&style=none&taskId=u567eeb13-7b22-4180-b941-4cb62f0ea3e&title=&width=684)
+![image.png](images/fish.png)
 上面是2022考季，我复习的主要经历
 
 1. 2021年10月中旬-11月，每天大概一两个小时左右，走马观花一样看完了预习班
@@ -118,7 +118,7 @@ CPA考试6科分专业阶段和综合阶段，专业阶段共6科，把科目学
 很具体对吧，而且每一条都可能是一个选择题，甚至两个，人们对自己犯下的错误通常印象深刻，所以我建议多做做选择题，不要怕做错，把错题好好整理一下，考前多翻翻。
 
 大题部分，我去年用了刘颖老师的《60道大题》，是免费的，大家可以到她的微博下面去找，预计明年也会出，刷够5遍，基本上大题应该就不会有太大问题了。
-![image.png](https://cdn.nlark.com/yuque/0/2022/png/141952/1669087114730-dd093b11-c509-436e-9201-d6df64a96b0e.png#averageHue=%23f3f2f2&clientId=ub5d425e3-7dc5-4&crop=0&crop=0&crop=1&crop=1&from=paste&height=574&id=u35d65c05&margin=%5Bobject%20Object%5D&name=image.png&originHeight=1148&originWidth=1298&originalType=binary&ratio=1&rotation=0&showTitle=false&size=723844&status=done&style=none&taskId=u5f0f7d08-7a48-4239-a0fb-1109e0793b2&title=&width=649)
+![image.png](images/60_images.png)
 
 ### 网课
 
