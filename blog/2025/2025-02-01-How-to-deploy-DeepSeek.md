@@ -1,6 +1,5 @@
 ---
-title: "Deepseek-r1满血版部署"
-slug: /how-to-deploy-deepseek-r1
+title: "真·生产级满血版Deepseek-r1部署实例"
 tags: [llm, deepseek]
 date: 2025-02-01T10:00
 ---
