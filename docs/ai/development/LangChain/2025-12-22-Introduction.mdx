@@ -1,6 +1,7 @@
 ---
 title: "1. LangChain 入门，构建第一个智能体"
 date: 2025-12-23T10:00
+position: 1
 tags: ["LangChain"]
 ---
 <div class="container_mt6G margin-vert--md"><time datetime="2025-12-23T00:00:00.000Z">2025年12月23日</time> · 阅读需 5 分钟</div>
@@ -8,6 +9,8 @@ tags: ["LangChain"]
 **LangChain**是一个用于构建智能体的开源框架，可以集成任何模型或者工具。
 
 它由大语言模型驱动，只需要不到10行代码，就可以连接OpenAI、Anthropic、谷歌等世界最先进的模型为你工作。
+
+> 以下内容基于 [LangChain 1.2.0](https://docs.langchain.com/oss/python/releases/changelog#dec-15%2C-2025) 版本
 
 ## 准备工作
 
@@ -152,7 +155,7 @@ print(f"结构化输出结果：{structure_result['structured_response']}")
 值得注意的是，在最后输出结构化时，很可能出现报错，如果排除了网不通/代码写错等等问题后依然出现，那么通常有两种可能性
 
 1. 小规模模型的指令跟随能力、文档总结能力、结构化能力有缺陷
-2. 即使是最先进的模型（如 DeepSeek-V3.2），也会因为提供厂商的工程能力（官方和第三方）差异导致输出结果不符合预期<sup>[1](#1-deepseek-v32-指令跟随缺陷导致的-agent-输出不符合预期)</sup>。
+2. 即使是最先进的模型（如 DeepSeek-V3.2），也会因为提供模型厂商的工程能力（官方和第三方）差异导致输出结果不符合预期<sup>[1](#1-deepseek-v32-指令跟随缺陷导致的-agent-输出不符合预期)</sup>。
 
 在初学时，极容易遇到这个问题卡主，解决方案如下：
 1. 财力够，建议尽量使用官方提供的模型，如 DeepSeek 官方、OpenAI 官方等等，避免使用第三方。
@@ -177,3 +180,11 @@ print(f"结构化输出结果：{structure_result['structured_response']}")
 1. 使用官方提供的 [DeepSeek](https://platform.deepseek.com/) 接口
 2. 将你部署的 SGLang 版本升级到 0.5.7（写稿时暂未发布）以上版本来解决这个问题
 
+### 2. 有没有比较价廉物美小模型测试方案？
+这里我推荐使用 `qwen3:4b-instruct-2507-fp16` 这个模型，你可以直接使用 `ollama run qwen3:4b-instruct-2507-fp16` 来运行这个模型，即使性能较差的电脑也可以顺利运行。
+
+如果你的电脑还不错，那么`qwen3:30b-instruct`这个模型也可以尝试一下，性能会好很多。
+
+qwen3 系列模型，包括语音、图像、视频等多模态模型，在应对学习任务上应该都可以胜任
+
+那么本篇文章就到这里啦，感谢你的阅读，我们一起加油！
