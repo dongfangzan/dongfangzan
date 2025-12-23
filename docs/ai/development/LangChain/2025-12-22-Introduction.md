@@ -1,3 +1,179 @@
 ---
-title: "待发布，敬请期待"
+title: "1. LangChain 入门，构建第一个智能体"
+date: 2025-12-23T10:00
+tags: ["LangChain"]
 ---
+<div class="container_mt6G margin-vert--md"><time datetime="2025-12-23T00:00:00.000Z">2025年12月23日</time> · 阅读需 5 分钟</div>
+
+**LangChain**是一个用于构建智能体的开源框架，可以集成任何模型或者工具。
+
+它由大语言模型驱动，只需要不到10行代码，就可以连接OpenAI、Anthropic、谷歌等世界最先进的模型为你工作。
+
+## 准备工作
+
+> 首先，LangChain支持Python和Typescript，在本系列文章中，主要使用python进行演示
+
+### 安装LangChain
+```shell
+pip install -U langchain 
+# Python版本要求在3.10以上
+```
+
+### 集成大模型
+LangChain支持了目前主流的各大AI平台，如OpenAI、谷歌、Anthropic、DeepSeek等等
+
+你可以在[这个地址](https://docs.langchain.com/oss/python/integrations/providers/overview)看到所有支持的模型厂商
+
+```shell
+# 安装openai相关支持 
+pip install -U langchain-openai 
+
+# 安装DeepSeek相关支持 
+pip install -U langchain-deepseek
+```
+
+当然也支持本地部署的大模型，如Ollama、vLLM、SGLang等本地
+
+在开始使用LangChain写我们的第一行代码之前，我们首先需要准备一个大模型的API，通常来说有两种途径
+
+1. 你可以在[OpenAI](https://platform.openai.com/),[DeepSeek](https://platform.deepseek.com/)等官方网站上去申请一个账号，获取一个api-key
+2. 使用本地的服务器、电脑来部署一个本地的大模型（使用Ollama、vLLM、SGLang等）
+
+## 快速开始
+
+### 从调用一个DeepSeek开始
+
+```python
+from langchain_core.messages import HumanMessage  
+from langchain_deepseek import ChatDeepSeek  
+# api_base可以用于特定的代理地址或本地地址，不填则默认使用DeepSeek官方
+# api_key来自DeepSeek官方申请得到
+model = ChatDeepSeek(model="deepseek-chat",  
+                     # api_base="http://localhost:8000/v1",  
+                     api_key="sk-xxxxx")  
+  
+result = model.invoke("你好 DeepSeek!") 
+  
+print(result.content)
+```
+运行可以看到输出代码如下，我们就成功调用了 DeepSeek 。
+
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/20251222154826.png" width="600" border="1" />
+
+可以看到，使用 LangChain ，从创建项目到成功调用大模型，大概只需要几分钟时间，是非常简单的。
+
+LangChain 让我们可以**节省出更多的时间来专注业务的构建**，不用再去重复造轮子了。
+
+如果你的电脑或服务器还不错，也可以使用本地的 ollama 运行一个 Qwen3 来进行测试
+
+```python
+model = ChatOllama(model="qwen3")  
+result = model.invoke("你好 Qwen3! \\no_think")  
+print(result.content)
+```
+
+### 在基础模型之上构建智能体
+
+我们使用 LangChain ，主要是需要构建一个专属领域的智能体，比如
+1. **在一个 IDE 里创建一个 AI 编程助手**
+2. **在医生看诊时的一个写病历、下诊断助手**
+3. **公司内部的一个停车场查询助手等等**
+
+假设我们实际的业务中有一个接口
+```python
+# 停车场车位信息  
+def get_parkinglot_info() -> str:  
+    """获取停车场车位信息"""  
+    # 我们可以假设系统中有 3 个停车场，分别用 mock 的数据模拟  
+    # 实际业务中可以通过接口查询  
+    return ("停车场车位信息如下：\n1号车位已满"  
+            "\n2号停车场剩余 20 个车位"  
+            "\n3号停车场剩余 30 个车位")
+```
+
+我们基于上述 DeepSeek 模型创建一个Agent，让其可以帮我们在接口里自动查询出哪个停车场车位充足。
+```python
+from langchain.agents import create_agent  
+from langchain_core.messages import HumanMessage, AIMessage  
+from langchain_deepseek import ChatDeepSeek  
+  
+# 调用一个DeepSeek  
+model = ChatDeepSeek(model="deepseek-chat",  
+                     # 可以使用搭建的DeepSeek，不填写则可以使用DeepSeek的公开API  
+                     api_base="http://localhost:8000/v1",  
+                     api_key="1")  
+# 停车场车位信息  
+def get_parkinglot_info() -> str:  
+    """获取停车场车位信息"""  
+    # 我们可以假设系统中有 3 个停车场，分别用 mock 的数据模拟  
+	# 实际业务中可以通过接口查询
+    return ("停车场车位信息如下：\n1号车位已满"  
+            "\n2号停车场剩余 20 个车位"  
+            "\n3号停车场剩余 30 个车位")  
+  
+agent = create_agent(model,  
+                     system_prompt="你是一个停车场车位查询助手",  
+                     tools=[get_parkinglot_info]  
+                     )  
+  
+result = agent.invoke({"messages": [HumanMessage(content="哪个停车场还有车位？")]})  
+  
+for message in result.get('messages', []):  
+    if isinstance(message, AIMessage):  
+        print(message.content)
+```
+查询结果如下
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/20251223104124.png" width="250" border="1" />
+
+为了更有效的对接系统，让 AI 可以帮我们将非结构化的数据整理成结构化的数据方便进行处理
+
+比如：让 AI 帮我们找到车位最多的停车场，并结构化成我们希望的样式
+```python
+class ParkinglotInfo(BaseModel):  
+    name: str = Field(description="停车场名称")  
+    num: int = Field(description="剩余车位数量")
+
+structured_agent = create_agent(model,
+                              system_prompt="你是一个停车场车位查询助手。请调用工具获取停车场信息，然后按照用户要求的格式组织数据。",
+                              tools=[get_parkinglot_info],
+                              response_format=ToolStrategy(ParkinglotInfo))
+
+structure_result = structured_agent.invoke({"messages": [HumanMessage("请告诉我哪个停车场的车位最多？并按照 {name:停车场名称,num:数量} 的格式进行组织")]})
+
+  
+print(f"===========================")  
+print(f"结构化输出结果：{structure_result['structured_response']}")
+
+# 输出结果
+# ===========================
+# 结构化输出结果：name='3号停车场' num=30
+```
+:::tip
+值得注意的是，在最后输出结构化时，很可能出现报错，如果排除了网不通/代码写错等等问题后依然出现，那么通常有两种可能性
+
+1. 小规模模型的指令跟随能力、文档总结能力、结构化能力有缺陷
+2. 即使是最先进的模型（如 DeepSeek-V3.2），也会因为提供厂商的工程能力（官方和第三方）差异导致输出结果不符合预期<sup>[1](#1-deepseek-v32-指令跟随缺陷导致的-agent-输出不符合预期)</sup>。
+
+在初学时，极容易遇到这个问题卡主，解决方案如下：
+1. 财力够，建议尽量使用官方提供的模型，如 DeepSeek 官方、OpenAI 官方等等，避免使用第三方。
+2. 资金有限，尽量使用 Qwen3系列 这种指令跟随能力较强的小模型，会减少很多因为模型能力不足导致的问题。
+
+*对于资金有限的朋友，这里我推荐`qwen3:4b-instruct-2507-fp16`这个模型，你可以直接使用`ollama run qwen3:4b-instruct-2507-fp16`来运行这个模型，即使性能较差的电脑也可以顺利运行。*
+:::
+
+## 结语
+本篇文章中，我们了解到了在 AI 应用开发中，如何使用 LangChain 快速连接一个大语言模型，构建一个简单的 Agent，使用大语言模型进行工具调用以及结构化输出。
+
+## 参考文献
+*1. https://docs.langchain.com/oss/python/langchain/overview*
+
+## 附注
+### 1. DeepSeek-v3.2 指令跟随缺陷导致的 Agent 输出不符合预期
+如果你在使用 DeepSeek-V3.2 这种旗舰模型时，出现了类似下面的问题，那么恭喜你，通常这是一个本地部署/第三方提供的 DeepSeek 缺陷导致的问题，详情可以见[issue: 14695](https://github.com/sgl-project/sglang/issues/14695)。
+
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/20251223113800.png" width="400" border="1" />
+
+#### 解决方法
+1. 使用官方提供的 [DeepSeek](https://platform.deepseek.com/) 接口
+2. 将你部署的 SGLang 版本升级到 0.5.7（写稿时暂未发布）以上版本来解决这个问题
+
