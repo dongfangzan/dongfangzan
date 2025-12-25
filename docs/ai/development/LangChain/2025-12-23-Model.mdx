@@ -120,7 +120,7 @@ responses = model.batch([
 
 这在需要模型具备一定的外部知识或能力时非常有用，例如回答需要实时数据或执行复杂计算的问题。
 
-<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/diagram.svg" alt="工具调用流程" width={500}/>
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/diagram.svg" alt="工具调用流程" width={600}/>
 
 ```python
 
@@ -154,7 +154,7 @@ print(f"最终结果是：{final_response.content}")
 ```
 
 关于每一次 Tool Call 的处理流程中，消息的变化如下：
-![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/diagram%20(1).svg)
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/diagram%20(1).svg" alt="工具调用流程" width={700}/>
 
 | 状态 | 触发动作 | 消息数量 | 关键内容 |
 |------|----------|----------|----------|
