@@ -1,0 +1,218 @@
+---
+title: 怀疑 Vibe Coding？Claude Code 实战体验：AI 现在可以真正帮你写代码吗？
+sticky: true
+authors:
+  - name: 东方赞
+    title: 程序员/注册会计师
+    url: https://github.com/dongfangzan
+    image_url: https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202412021355421.png
+tags: [glm]
+---
+在上篇文章中[2025年12月26日，我不再写代码了](https://dongfangzan.com/2025/12/26/no-coding/)
+
+我讲述了我自己如何从 AI 辅助编程，转向 Vibe Coding 的心路历程
+
+相信很多人都有类似经历，但是也会怀疑
+1. **Vibe Coding 到底有没有用？如何才能真正利用 Vibe Coding 来提升编程效率？**
+2. **Vibe Coding 很贵，是否值得购买？有没有更便宜的方案？**
+3. **受限于网络问题，国外模型不可用/公司内网环境无法对接外网，是否有解决方案？**
+
+在本篇文章中，我们就来一一解答这些问题
+
+
+# 1. Vibe Coding 到底有没有用？
+首先，Vibe Coding 是一个基于 AI 的编程工具，它的主要作用是帮助开发者快速生成代码。
+
+从 3 月份 Claude Code 发布以来，已经过去了 9 个月时间
+
+Claude Code 的作者 Boris 在 X 上放出了自己过去 30 天里的真实生产数据：
+> 在过去 30 天里，我合并了 259 个 PR —— 共 497 次提交，新增约 4 万行代码，删除约 3.8 万行代码。而且，每一行代码都是由 Claude Code + Opus 4.5 编写的。
+> 
+> Claude 可以稳定地持续运行数分钟、数小时，甚至数天（借助 Stop hooks）。
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301325054.png)
+
+当然如果你觉得他是作者自卖自夸，但其实 Claude Code 是一个开源项目
+
+所有人的提交记录都可以在代码仓库里查看
+
+https://github.com/anthropics/claude-code 
+
+毕竟数据不能作假，Vibe Coding 已经确确实实成为了很多人的选择
+
+# 2. 如何才能真正利用 Vibe Coding 来提升编程效率？
+分享一下我自己的一个真实编程环境
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301329689.png)
+
+这是字节跳动的 TRAE + Claude Code 组合
+
+我不仅用它来写代码，还用来写文档，甚至还用他来学习。
+## 代码层面
+代码质量的好坏其实更多取决于你使用的模型好坏
+
+这个与大家在网页上进行对话式的问答写出来的代码差别不大
+
+区别更多的在于，**Claude Code 能够直接读取你仓库中的代码，而不再依赖你手动复制粘贴**
+
+**对于一个代码仓库，你可以直接让模型分析整个仓库的核心逻辑**
+
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301339904.png" alt="Claude Code 分析仓库核心逻辑" width={600}/>
+
+**分析可能存在的问题，例如代码质量、性能问题、安全问题等**
+
+<img src="https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301341583.png" alt="Claude Code 分析仓库问题" width={300}/>
+
+**并让其直接修复**
+
+你甚至可以让模型直接操作 git 仓库，比如提交代码、创建发布、自动合并 PR、构建镜像并发布到仓库
+
+**将原来需要折腾一整套 CICD 流程的时间大幅简化**
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301350873.png)
+
+## 文档层面
+基于整个代码仓库，一次性生成 README 文档，帮助其他开发者快速了解项目的功能、安装方法、使用示例等。
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301347281.png)
+
+## 学习新知识
+对于不了解的新知识，Claude Code 可以直接帮助你学习并理解
+
+比如，我希望学习 LangChain 这一开发框架
+
+就可以让 Claude Code 直接讲解 LangChain 的基本概念、架构、使用方法等，**并生成相应的示例代码**
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301405864.png)
+
+**还有更多高效的功能可以让你事半功倍**
+
+# 3. 如何使用 Claude Code
+
+## 3.1 安装 NodeJS
+Claude Code 是一个 NodeJS 模块，因此你需要先安装 NodeJS
+
+你可以从 https://nodejs.org/ 下载并安装最新版本的 NodeJS
+
+## 3.2 安装 Claude Code
+安装完成 NodeJS 后，你可以使用 npm 来安装 Claude Code
+
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301410858.png)
+
+安装完成后，执行下面的命令，你就可以看到 Claude Code 的界面了
+```bash
+claude
+```
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301412333.png)
+
+## 3.3 安装 IDE 插件
+为了更方便地使用 Claude Code，你可以安装对应的 IDE 插件
+
+取决于你的爱好，VS Code 或 JetBrains 等 IDE 都有对应的插件
+
+### VS Code 插件（推荐）
+你可以在 VS Code 插件市场搜索 "Claude Code" 并安装
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301414658.png)
+
+然后点击代码窗口右上角的 "Claude Code" 图标，即可打开 Claude Code 界面
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301416186.png)
+
+### JetBrains 插件
+同样的，在 JetBrains 插件市场搜索 "Claude Code" 并安装
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301418550.png)
+
+相比之下，VS Code 插件的功能更强大，使用体验更好
+
+安装好了之后，其实就可以直接使用 Claude Code 了
+
+但是！Claude Code 原生的不仅受限于网络限制，而且价格并不便宜
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301423928.png)
+
+想要拿来高强度编码的话，即使是 20 美元的 Pro 订阅方案也经不住造
+
+# 4. 有没有更便宜的方案？
+其实国内很多模型，都提供了 Claude Code 对接方案
+
+如果你已经买了相应的模型订阅，那么就可以直接使用
+
+### DeepSeek
+
+https://api-docs.deepseek.com/zh-cn/guides/anthropic_api
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301427243.png)
+
+### GLM
+
+https://docs.bigmodel.cn/cn/coding-plan/tool/claude
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301429468.png)
+
+### 通义千问系列
+
+https://bailian.console.aliyun.com/?tab=doc#/doc/?type=model&url=2949529
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301431525.png)
+
+### CC Switch
+这里还推荐一个软件叫做 **CC Switch**
+
+它可以帮助你在不同的模型供应商之间切换，而不需要重新安装插件
+
+https://github.com/farion1231/cc-switch
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301449681.png)
+
+# 不能上外网，只能用内网的方案
+如果你的公司有严格的网络策略，不能直接上外网，只能通过内网访问模型 API
+
+当然如果公司内部能够统一搭建 Claude Code 代理来给用自然是最好的
+
+如果没有，你需要找公司的 AI 部门，询问是否能够提供一个内部的模型 API 地址
+
+这个 AI 的地址分为两种情况
+1. **OpenAI 格式**，通常是`/v1/chat/completions`结尾
+2. **Claude 格式**，通常是`/v1/messages`结尾
+
+如果你的内网 AI 接口支持第 2 种 Claude 格式，按照上述方法简单配置一下 API 地址，即可直接使用 Claude Code
+
+但在当前的市场上，绝大多数模型都只支持第 1 种 OpenAI 格式
+
+Claude Code 本身却不支持这种格式，所以你需要进行转换。
+
+### Claude Code Router
+你可以借助一个叫做 **Claude Code Router** 的工具来实现这一转换
+
+https://github.com/musistudio/claude-code-router
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301444075.png)
+
+在已经安装完 Claude Code 后，安装 Claude Code Router
+```bash
+npm install -g @musistudio/claude-code-router
+```
+并使用下面的命令启动配置 Claude Code Router
+```bash
+ccr ui
+```
+
+在此，就可以将自己部署/第三方的 OpenAI 模型接入 Claude Code 中使用啦！
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202512301446536.png)
+
+# 最后
+从最初的怀疑到现在的高效使用，Vibe Coding 确实已经证明了它的价值。
+
+这不是要让 AI 完全取代程序员，而是让程序员从重复的编码工作中解放出来，将更多精力投入到架构设计、产品思考和创新上。
+
+当你不再纠结于代码的细节，而是专注于"要做什么"而非"怎么写"时，你的生产力将得到质的飞跃。
+
+**Vibe Coding 不是终点，而是编程方式的新起点。在这个 AI 时代，学会与 AI 协作，将成为每个程序员的核心竞争力。**
+
+与其观望和怀疑，不如亲自体验一下。也许过不了多久，你也会和我一样感叹：原来写代码可以这么轻松。
