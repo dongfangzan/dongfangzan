@@ -1,0 +1,274 @@
+---
+title: Claude Agent SDK 开发指南1 - QuickStart
+sticky: true
+authors:
+  - name: 东方赞
+    title: 程序员/注册会计师
+    url: https://github.com/dongfangzan
+    image_url: https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202412021355421.png
+tags: [Claude Code]
+---
+
+AI发展到了2026年，越来越多的开发者已经开始注意到，需要落地AI应用，单纯依赖大模型能力已经远远不够了
+
+大家开始逐步开发落地AI应用，而Claude Agent SDK的出现，无疑为开发者提供了一个极其便利的工具
+
+本系列文章，我们就来介绍Claude Agent SDK的使用方法和一些实战经验
+
+{/* truncate */}
+# 什么是Claude Agent SDK
+使用 Claude Code 作为库构建生产级 AI 代理
+
+构建能够自主读取文件、运行命令、搜索网络、编辑代码等的 AI 代理。Agent SDK 为您提供了与 Claude Code 相同的工具、代理循环和上下文管理，可在 Python 和 TypeScript 中编程。
+
+Agent SDK 包含用于读取文件、运行命令和编辑代码的内置工具，因此您的代理可以立即开始工作，无需您实现工具执行。深入了解快速入门或探索使用 SDK 构建的真实代理
+
+[官方文档地址](https://platform.claude.com/docs/zh-CN/agent-sdk/overview)
+
+> 以上是官方对Claude Agent SDK的介绍
+
+# 快速开始
+下面我们就来快速体验一下Claude Agent SDK的使用方法
+
+## 环境准备
+- Node.js 18+ 或 Python 3.10+
+- 一个Anthropic账户
+- 或支持兼容Anthropic API的模型（你可以使用最新版本的Ollama进行本地测试）
+
+> 以下都是用Python版本进行演示
+
+## 安装
+### Claude Code 安装
+Agent SDK是使用Claude Code作为其运行时的，所以你需要先安装Claude Code
+
+```bash
+# macOS/Linux/WSL
+curl -fsSL https://claude.ai/install.sh | bash
+```
+或者使用npm进行安装
+```bash
+npm install -g @anthropic-ai/claude-code
+```
+### 安装Agent SDK包
+```bash
+# TypeScript
+npm install @anthropic-ai/claude-agent-sdk
+```
+```bash
+# Python
+pip install claude-agent-sdk
+```
+### 配置本地环境变量
+```
+ANTHROPIC_API_KEY=sk-ant-your-key-here
+兼容Anthropic API的地址
+# ANTHROPIC_BASE_URL=http://localhost:3456
+```
+
+
+## Hello World 示例
+
+编写代码如下
+```Python
+import asyncio
+from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, ResultMessage
+
+async def main():
+    # Agentic loop: streams messages as Claude works
+    async for message in query(
+        prompt="你好，请介绍一下自己",
+        options=ClaudeAgentOptions(
+            allowed_tools=["Read"],  # Tools Claude can use
+        )
+    ):
+        # Print human-readable output
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if hasattr(block, "text"):
+                    print(block.text)              # Claude's reasoning
+                elif hasattr(block, "name"):
+                    print(f"Tool: {block.name}")   # Tool being called
+        elif isinstance(message, ResultMessage):
+            print(f"Done: {message.subtype}")      # Final result
+
+asyncio.run(main())
+
+# Output:
+# 我是 Claude，由 Anthropic 开发的 AI 助手。我可以在对话中帮助你完成各种任务，包括：
+
+# **💻 编程与开发**
+# - 编写、审查和调试代码
+# - 帮助设计软件架构
+# - 修复 bug 和优化性能
+# - 运行命令和测试
+```
+
+
+# Agent能力示例
+
+为了展示Agent的能力，我们可以让它读取一个本地文件，以官方文档中的例子为例
+
+首先，我们可以准备一个有缺陷的代码如下，并保存到本地叫做`utils.py`：
+```Python
+def calculate_average(numbers):
+    total = 0
+    for num in numbers:
+        total += num
+    return total / len(numbers)
+
+def get_user_name(user):
+    return user["name"].upper()
+```
+在这段代码中，有两个主要错误
+1. `calculate_average` 函数在计算平均值时没有处理空列表的情况，这会导致除以零的错误。
+2. `get_user_name` 函数假设传入的 `user` 字典中总是包含 `name` 键，如果缺少该键会引发 `KeyError`。
+
+我们使用Agent SDK来让Claude自动修复这些错误
+```Python
+import asyncio
+from claude_agent_sdk import query, ClaudeAgentOptions, AssistantMessage, ResultMessage
+
+async def main():
+    # Agent执行循环
+    async for message in query(
+        prompt="请审查代码utils.py，查找可能导致崩溃的错误。修复你发现的任何问题。",
+        options=ClaudeAgentOptions(
+            allowed_tools=["Read", "Edit", "Glob"],  # 可以使用的工具
+            permission_mode="acceptEdits"            # 自动批准文件编辑
+        )
+    ):
+        # 打印人类可读的输出
+        if isinstance(message, AssistantMessage):
+            for block in message.content:
+                if hasattr(block, "text"):
+                    print(block.text)              # Claude的推理过程
+                elif hasattr(block, "name"):
+                    print(f"Tool: {block.name}")   # 调用的工具
+        elif isinstance(message, ResultMessage):
+            print(f"Done: {message.subtype}")      # 最终结果
+asyncio.run(main())
+```
+
+可以看到输出内容如下
+```
+我会帮您审查并修复 utils.py 文件中的潜在错误。让我先读取这个文件。
+Tool: Glob
+Tool: Read
+我发现了这个文件中存在几个可能导致崩溃的错误：
+
+## 发现的问题：
+
+1. **`calculate_average` 函数 - 零除错误**：当 `numbers` 为空列表时，`len(numbers)` 返回 0，导致除零错误。
+
+2. **`get_user_name` 函数 - KeyError**：当传入的字典中没有 "name" 键时，会抛出 KeyError。
+
+3. **`get_user_name` 函数 - AttributeError**：如果 `user` 不是一个字典，或者 `user["name"]` 不是字符串，调用 `.upper()` 会失败。
+
+4. **`get_user_name` 函数 - TypeError**：如果传入的不是字典类型，索引操作 `user["name"]` 会失败。
+
+现在让我修复这些问题：
+Tool: Edit
+Tool: Edit
+完成！我已经修复了所有可能导致崩溃的错误。以下是修复的详细说明：
+
+## 修复内容：
+
+### 1. `calculate_average` 函数
+**问题**：空列表会导致 `ZeroDivisionError`
+**修复**：添加了空列表检查，当列表为空时返回 0
+
+### 2. `get_user_name` 函数
+**问题**：多个潜在错误
+- `KeyError`：字典中没有 "name" 键
+- `AttributeError`：不是字符串类型无法调用 `.upper()`
+- `TypeError`：传入的不是字典类型
+
+**修复**：
+- 检查 `user` 是否为空或不是字典类型
+- 使用 `.get()` 方法安全地获取 "name" 值，避免 `KeyError`
+- 使用 `str()` 转换确保类型正确
+- 添加空字符串检查，避免对空值调用 `.upper()`
+
+现在这两个函数都具有更强的健壮性，能够处理各种边界情况而不会导致程序崩溃。
+```
+
+随后检查`utils.py`文件，发现代码已经被自动修复为如下内容
+```Python
+def calculate_average(numbers):
+    if not numbers:
+        return 0
+    total = 0
+    for num in numbers:
+        total += num
+    return total / len(numbers)
+
+def get_user_name(user):
+    if not user or not isinstance(user, dict):
+        return ""
+    name = user.get("name", "")
+    return str(name).upper() if name else ""
+```
+
+可以看到，**只需要几分钟时间**，我们就用agent sdk实现了一个自动读取，自动修改代码的AI Agent
+
+当然我们也可以通过更改一些参数，来修改Agent的能力，比如增加网络搜索
+```Python
+options=ClaudeAgentOptions(
+    allowed_tools=["Read", "Edit", "Glob", "WebSearch"],
+    permission_mode="acceptEdits"
+)
+```
+
+或者给Claude一个自定义的系统提示词
+```Python
+options=ClaudeAgentOptions(
+    allowed_tools=["Read", "Edit", "Glob"],
+    permission_mode="acceptEdits",
+    system_prompt="你是一个经验丰富的Python开发者，请帮我审查并修复代码中的错误。"
+)
+```
+
+亦或者直接执行bash命令
+```Python
+options=ClaudeAgentOptions(
+    # 允许Bash工具
+    allowed_tools=["Read", "Edit", "Glob", "Bash"],
+    permission_mode="acceptEdits"
+)
+```
+## 工具
+工具是Claude Agent SDK的核心能力之一
+
+它可以控制你的Agent能够执行哪些操作
+工具|Agent能够做什么
+:-|:-
+Read、Glob、Grep、WebSearch|只读、分析，聊天助手
+Read、Edit、Glob|修改、分析代码，对权限要求高
+Read、Edit、Glob、Bash、Grep|完全自动工具
+
+## 权限模式
+权限模式(permission_mode)主要用于控制你需要多少人工干预
+模式|行为|说明
+:-|:-|:-
+acceptEdits|自动批准文件编辑，询问其他操作|受信任的开发工作流
+bypassPermissions|无提示运行|适合完全自动化场景
+default|需要人工批准|自定义批准流程
+
+更多权限模式的介绍，我们可以参照官方文档，也可以我们以后再来探讨
+
+# 总结
+截止到这个阶段，我们了解到了Claude Agent SDK的基本使用方法
+
+与我们熟悉的OpenAI的`/chat/completions`接口相比
+
+Claude Agent SDK完整的封装了Agent的能力，让你不用再关心
+1. 如何管理上下文
+2. 如何调用工具
+3. 如何处理多轮对话
+4. 如何处理文件读写
+等等复杂的逻辑，也让你可以更专注于业务逻辑的实现
+
+相较于`LangChain`等框架，Claude Agent SDK将整个Think-Act-Observe流程进行了高度封装，且性能更优，使用体验更好
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601211625185.png)
+
+好了今天的快速入门就到这里，感谢你看到这里，下期见
