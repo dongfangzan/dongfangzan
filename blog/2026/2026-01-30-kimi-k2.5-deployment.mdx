@@ -1,0 +1,287 @@
+---
+title: 重磅开源！Kimi K2.5 本地部署全攻略：手把手教你跑通 1T MoE 巨兽
+sticky: true
+authors:
+  - name: 东方赞
+    title: 程序员/注册会计师
+    url: https://github.com/dongfangzan
+    image_url: https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202412021355421.png
+tags: [Claude Code]
+---
+# 🚀 重磅开源！Kimi K2.5 本地部署全攻略：手把手教你跑通 1T MoE 巨兽
+
+最近，**Kimi K2.5** 模型正式开源，再一次刷新了开源大模型的能力天花板！🎉
+
+特别是在 **Agent 智能体、编程开发 和 视觉理解** 领域，其表现堪称惊艳。
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601301345380.png)
+
+本篇文章，我们就最近这几天在本地部署 Kimi K2.5 模型的**踩坑实践**做一个全方位分享，助你一次跑通！💪
+
+---
+
+### 📦 一、 模型下载
+
+你可以在 **魔搭社区** 或者 **Hugging Face** 找到这个模型。
+
+👉 **国内推荐：魔搭社区**，下载速度会更快一些
+🔗 链接：https://modelscope.cn/models/moonshotai/Kimi-K2.5
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601301348655.png)
+
+#### 📊 模型参数概览
+在模型卡片中我们可以看到：
+*   **总参数量**：1T (MoE 架构)
+*   **激活参数**：32B
+*   **量化版本**：原生 INT4
+*   **实际大小**：约 **595.21GB** (虽然听起来恐怖，但因为是 INT4，实际体量在可控范围内)
+
+---
+
+### ⚙️ 二、 硬件环境准备
+
+从模型大小就能看出，这位“巨兽”对硬件的要求不低。😨
+
+#### 💻 最低配置门槛
+`8 * 96GB H20` 是能摸到这个模型的底线，且需要**裁剪上下文长度**。
+
+#### ✨ 推荐配置方案
+为了拥有丝滑的使用体验，我们推荐以下几种配置：
+
+| 方案 | 硬件配置 | 推荐指数 | 备注 |
+| :--- | :--- | :--- | :--- |
+| **方案一** | `8 * 141GB H200` (单机) | ⭐⭐⭐⭐⭐ | **最推荐**，省心高效 |
+| **方案二** | `2 * 8 * 96GB H20` (双机) | ⭐⭐⭐⭐ | 需配置多机通信 |
+| **方案三** | `2 * 8 * 80GB H100` (双机) | ⭐⭐⭐⭐ | 算力强，显存刚好 |
+
+> 💡 **小贴士**：比如 H100 这种算力够但显存吃紧的卡，完全可以通过**多机部署**来解决。
+
+---
+
+### 🛠️ 三、 部署步骤
+
+#### 0️⃣ 前置准备
+首先在你的服务器上安装好 **Nvidia 驱动** 和 **CUDA 环境**（此处省略一万字...）。
+
+##### 📥 下载模型到本地
+```bash
+# 1. 安装 modelscope
+pip install modelscope
+
+# 2. 下载模型到指定目录
+modelscope download moonshotai/Kimi-K2.5 --local-dir ./dir
+```
+⏳ 经过漫长的等待... 下载完成后，整个 Kimi K2.5 模型大约 **555GB**。
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601301357478.png)
+
+📖 官方部署文档参考：
+https://modelscope.cn/models/moonshotai/Kimi-K2.5/file/view/master/docs%2Fdeploy_guidance.md?status=1
+
+---
+
+#### 1️⃣ 方案 A：使用 vLLM 部署
+vLLM 是一个高性能的大模型推理引擎，支持大规模模型的高效推理。
+
+##### 📍 方法一：本机直接部署
+安装 vLLM（注意版本号！）：
+```bash
+uv pip install -U vllm==0.15.0 
+# ⚠️ 注意：一定要安装 0.15.0 及以上版本，才能支持 Kimi K2.5
+```
+
+**启动脚本** (单机 `8 * 141GB H200/H20`)：
+```bash
+vllm serve $MODEL_PATH -tp 8 \
+--trust-remote-code \
+--tool-call-parser kimi_k2 \
+--reasoning-parser kimi_k2 \
+--enable-auto-tool-choice \
+--port 8000 \
+--host 0.0.0.0
+```
+
+##### 📍 方法二：Docker 部署 (推荐 🌟)
+不想污染本地环境？用 Docker！
+```bash
+# 拉取镜像
+docker pull vllm/vllm-openai:v0.15.0
+```
+
+**启动脚本**：
+```bash
+docker run --runtime nvidia --gpus all \
+    -v $MODEL_PATH:$MODEL_PATH \
+    -p 8000:8000 \
+    --ipc=host \
+    vllm/vllm-openai:v0.15.0 \
+    --model $MODEL_PATH \
+    --trust-remote-code \
+    --tool-call-parser kimi_k2 \
+    --reasoning-parser kimi_k2 \
+    --enable-auto-tool-choice \
+    --port 8000 \
+    --host 0.0.0.0
+```
+
+##### 🌐 多机部署补充
+如果是双机部署（如 `2 * 8 * 96GB H20`），需确保节点间网络互通（IB 网络配置正确）。
+👉 配置 IB 网络可参考我之前的 DeepSeek 部署文章：
+https://mp.weixin.qq.com/s/iyYap5ciQd3JtpgBNnld8Q
+
+**主节点脚本**：
+```bash
+vllm serve $MODEL_PATH \
+    --tool-call-parser kimi_k2 \
+    --reasoning-parser kimi_k2 \
+    --enable-auto-tool-choice \
+    --enable-expert-parallel \
+    --enable-chunked-prefill \
+    --host 0.0.0.0 --port 8000 \
+    --distributed-executor-backend mp \
+    --pipeline-parallel-size 2 \
+    --tensor-parallel-size 8 \
+    --nnodes 2 --node-rank 0 \
+    --served-model-name kimi-k2.5 \
+    --master-addr $HEAD_NODE_IP \
+    --trust-remote-code 
+```
+
+**从节点脚本**：
+```bash
+vllm serve $MODEL_PATH \
+    --tool-call-parser kimi_k2 \
+    --reasoning-parser kimi_k2 \
+    --enable-auto-tool-choice \
+    --enable-expert-parallel \
+    --enable-chunked-prefill \
+    --host 0.0.0.0 --port 8000 \
+    --distributed-executor-backend mp \
+    --pipeline-parallel-size 2 \
+    --tensor-parallel-size 8 \
+    --nnodes 2 --node-rank 1 \
+    --served-model-name kimi-k2.5 \
+    --master-addr $HEAD_NODE_IP --headless\
+    --trust-remote-code 
+```
+*(从节点脚本类似，仅需修改 `--node-rank 1` 并添加 `--headless` 参数)*
+
+---
+
+#### 2️⃣ 方案 B：使用 SGLang 部署 (🔥 作者当前在用)
+截止目前，SGLang 尚未发布最新的正式版，需使用**开发版本**。
+
+##### 📍 方法一：本机源码部署
+```bash
+# 安装依赖 (源码安装)
+pip install "sglang @ git+https://github.com/sgl-project/sglang.git#subdirectory=python"
+pip install nvidia-cudnn-cu12==9.16.0.29
+```
+
+**启动脚本**：
+```bash
+sglang serve --model-path $MODEL_PATH \
+--tp 8 \
+--trust-remote-code \
+--tool-call-parser kimi_k2 \
+--reasoning-parser kimi_k2 \
+--host 0.0.0.0 \
+--port 8000
+```
+
+多机部署，同样的需要首先配置IB网络
+
+```bash
+# 主节点
+sglang serve --model-path $MODEL_PATH --served-model-name kimi-k2.5 \
+    --tp 16 \
+    --trust-remote-code \
+    --tool-call-parser kimi_k2 \
+    --reasoning-parser kimi_k2 \
+    --dist-init-addr $HEAD_NODE_IP:$HEAD_NODE_PORT \ # 例如我的是10.0.41.2:8000
+    --nnodes 2 \
+    --node-rank 0 \
+    --host 0.0.0.0 \
+    --port 8000
+
+# 从节点
+sglang serve --model-path $MODEL_PATH --served-model-name kimi-k2.5 \
+    --tp 16 \
+    --trust-remote-code \
+    --tool-call-parser kimi_k2 \
+    --reasoning-parser kimi_k2 \
+    --dist-init-addr $HEAD_NODE_IP:$HEAD_NODE_PORT \ # 例如我的是10.0.41.2:8000
+    --nnodes 2 \
+    --node-rank 1 \
+    --host 0.0.0.0 \
+    --port 8000
+```
+
+##### 📍 方法二：Docker 部署 (推荐 🌟)
+```bash
+# 1. 拉取最新开发版镜像
+docker pull sglang/sglang:dev
+
+# 2. 启动容器
+docker run -d --gpus all \
+  --shm-size=128g \
+  --ipc=host \
+  --network=host \
+  --name kimi-k2.5 \
+  lmsysorg/sglang:dev \
+  bash -c "while true; do sleep 3600; done"
+
+# 3. 进入容器
+docker exec -it kimi-k2.5 bash
+
+# 4. 在容器内执行方法一中的启动脚本即可
+```
+
+##### ✅ 部署成功验证
+当日志中出现如下内容，恭喜你，模型启动成功！🎊
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601301427050.png)
+
+**实测性能**：
+*   **环境**：`2 * 8 * 80GB H100`
+*   **Decode 速度**：平均 **70-80 tokens/s**
+*   **评价**：比 GLM-4.7 和 MiniMax-M2.1 稍慢，但考虑到模型量级巨大，这个速度完全可接受！
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601301428754.png)
+
+---
+
+### 🔮 四、 下一步：落地
+
+相信大家本地部署 Kimi K2.5，绝不仅仅是为了简单聊聊天。🗣️
+
+在 2026 年的今天，**编程 和 Agent 才是 AI 的核心生产力**。
+
+Kimi K2.5 在这两方面的能力非常强大，加上原生支持多模态，让它在**视觉编程**方面拥有了天然优势。
+
+想象一下：
+> 📸 你只需要截个图，发给 AI，它就能帮你生成一个一模一样的界面...
+
+这种感觉有多爽？只有亲自体验过才知道！😎
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/63c5f13891f0cebe9cf614bdcfe8bce7.png)
+
+然而，理想很丰满，现实却有些“骨感”。🤔
+
+虽然直接购买官方 API 门槛最低，但在企业级实战中，我们往往面临着两座大山：**网络延迟的不确定性** 和 **核心数据的安全红线**。把核心代码交给公网模型？很多团队心里总会犯嘀咕。
+
+既然公有云有顾虑，那**“把能力搬回家”**就成了必然选择。
+
+但问题来了：**如何把 Kimi K2.5 这种“巨无霸”平稳落地，并像 API 一样丝滑地接入到我们的开发流中？**
+
+这正是我们下一阶段要攻克的重点——从“能跑通”到“好用”，实现真正的本地化生产力闭环。
+
+
+### 📝 写在最后
+
+感谢你看到这里！祝你部署顺利！🎉
+
+#### **下篇文章预告** 🚀
+
+我们将讨论如何将你本地部署的大模型完美接入 **Claude Code**，让你闲置的 GPU 转冒烟，发挥它的最大价值！🔥
+
+![](https://hx-zsy.oss-cn-chengdu.aliyuncs.com/img/202601301432256.png)
+
+**关注我，不迷路！** 👇
